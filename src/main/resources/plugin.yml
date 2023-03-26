@@ -1,0 +1,9 @@
+name: Zone_UNCLib
+version: '${project.version}'
+main: fr.teamunc.zone_unclib.Zone_UNCLib
+api-version: 1.19
+prefix: UNC-Zone
+depend: [ Base_UNCLib, ProtocolLib, Ekip_UNCLib ]
+authors: [ TeamUNC ]
+description: Zone lib for unc team plugins
+website: team-unc.fr
