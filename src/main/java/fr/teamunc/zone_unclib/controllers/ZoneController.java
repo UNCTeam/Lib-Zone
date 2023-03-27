@@ -6,9 +6,11 @@ import fr.teamunc.ekip_unclib.controllers.UNCTeamController;
 import fr.teamunc.ekip_unclib.models.UNCTeam;
 import fr.teamunc.zone_unclib.models.UNCZone;
 import fr.teamunc.zone_unclib.models.UNCZoneContainer;
+import lombok.val;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,13 +29,14 @@ public class ZoneController {
         return zoneContainer.getZones();
     }
 
-    public UNCZone isLocationInAZone(Location location) {
+    public ArrayList<UNCZone> isLocationInAZone(Location location) {
+        val res = new ArrayList<UNCZone>();
         for (UNCZone zone : zoneContainer.getZones()) {
             if (zone.isLocationInZone(location)) {
-                return zone;
+                res.add(zone);
             }
         }
-        return null;
+        return res;
     }
 
     public boolean canInteract(Player player, UNCZone zone) {
@@ -67,24 +70,43 @@ public class ZoneController {
     }
 
     public UNCZone getZone(String name) {
-        return zoneContainer.getZones().stream().filter(zone -> zone.getName().equals(name)).findFirst().orElse(null);
-    }
-    public void addInterZone(String zoneName, Location corner1, Location corner2) {
-        UNCZone zone = zoneContainer.getZones().stream().filter(z -> z.getName().equals(zoneName)).findFirst().orElse(null);
+        UNCZone zone = zoneContainer.getZones().stream().filter(z -> z.getName().equals(name)).findFirst().orElse(null);
         if (zone == null) {
             throw new IllegalArgumentException("La zone n'existe pas.");
         }
-
-        zone.addAnInterZone(corner1, corner2);
+        return zone;
+    }
+    public void addInterZone(String zoneName, Location corner1, Location corner2) {
+        getZone(zoneName).addAnInterZone(corner1, corner2);
     }
 
     public void removeInterZone(String zoneName, int interZoneIndex) {
-        UNCZone zone = zoneContainer.getZones().stream().filter(z -> z.getName().equals(zoneName)).findFirst().orElse(null);
-        if (zone == null) {
-            throw new IllegalArgumentException("La zone n'existe pas.");
-        }
+        getZone(zoneName).removeAnInterZone(interZoneIndex);
+    }
 
-        zone.removeAnInterZone(interZoneIndex);
+    public boolean removeInterZone(String zoneName, Location locationInZone) {
+        UNCZone zone = getZone(zoneName);
+
+        for (int i = 0; i < zone.getCoordinates().size(); i++) {
+            Location[] corners = zone.getCoordinates().get(i);
+
+            /// if the location is between the two corners
+            // min max
+            int minX = Math.min(corners[0].getBlockX(), corners[1].getBlockX());
+            int maxX = Math.max(corners[0].getBlockX(), corners[1].getBlockX());
+            int minY = Math.min(corners[0].getBlockY(), corners[1].getBlockY());
+            int maxY = Math.max(corners[0].getBlockY(), corners[1].getBlockY());
+            int minZ = Math.min(corners[0].getBlockZ(), corners[1].getBlockZ());
+            int maxZ = Math.max(corners[0].getBlockZ(), corners[1].getBlockZ());
+
+            if (locationInZone.getBlockX() >= minX && locationInZone.getBlockX() <= maxX
+                    && locationInZone.getBlockY() >= minY && locationInZone.getBlockY() <= maxY
+                    && locationInZone.getBlockZ() >= minZ && locationInZone.getBlockZ() <= maxZ) {
+                zone.removeAnInterZone(i);
+                return true;
+            }
+        }
+        return false;
     }
 
     public String getZonesInformations() {
@@ -106,29 +128,28 @@ public class ZoneController {
     }
 
     public void assignZoneToTeam(String zoneName, String teamName) {
-        UNCZone zone = zoneContainer.getZones().stream().filter(z -> z.getName().equals(zoneName)).findFirst().orElse(null);
-        if (zone == null) {
-            throw new IllegalArgumentException("La zone n'existe pas.");
-        }
-
-        zone.setTeamName(teamName);
+        getZone(zoneName).setTeamName(teamName);
     }
 
     public void setAdditionalInformation(String zoneName, String information, Object value) {
-        UNCZone zone = zoneContainer.getZones().stream().filter(z -> z.getName().equals(zoneName)).findFirst().orElse(null);
-        if (zone == null) {
-            throw new IllegalArgumentException("La zone n'existe pas.");
-        }
-
-        zone.setAdditionalInformation(information, value);
+        getZone(zoneName).setAdditionalInformation(information, value);
     }
 
     public Object getAdditionalInformation(String zoneName, String information) {
-        UNCZone zone = zoneContainer.getZones().stream().filter(z -> z.getName().equals(zoneName)).findFirst().orElse(null);
-        if (zone == null) {
-            throw new IllegalArgumentException("La zone n'existe pas.");
-        }
+        return getZone(zoneName).getAdditionalInformation(information, Object.class);
+    }
 
-        return zone.getAdditionalInformation(information, Object.class);
+    public String getZoneInformations(Location location) {
+        ArrayList<UNCZone> zones = isLocationInAZone(location);
+        if (zones.isEmpty())
+            return "Vous n'êtes pas dans une zone.";
+
+        StringBuilder sb = new StringBuilder();
+        for (UNCZone zone : zones) {
+            sb
+                .append(zone.getZoneInfo())
+                .append("\n");
+        }
+        return sb.toString();
     }
 }

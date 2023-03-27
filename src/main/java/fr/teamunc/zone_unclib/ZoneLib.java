@@ -6,6 +6,7 @@ import fr.teamunc.zone_unclib.minecraft.commands_executors.ZoneCommands;
 import fr.teamunc.zone_unclib.minecraft.commands_executors.ZoneTab;
 import fr.teamunc.zone_unclib.minecraft.event_listeners.BlockListener;
 import fr.teamunc.zone_unclib.models.UNCZoneContainer;
+import fr.teamunc.zone_unclib.models.UNCZoneParameters;
 import lombok.Getter;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -24,27 +25,33 @@ public class ZoneLib {
     @Getter
     private static ZoneController zoneController;
     @Getter
-    private static Map<String, Object> zoneInformationInitialiser;
+    private static UNCZoneParameters zoneParameters;
 
     private ZoneLib() {}
 
     public static void init(JavaPlugin plugin, Map<String, Object> zoneInformationInitialiser) {
         ZoneLib.plugin = plugin;
 
-        //init zone informations
-        if (zoneInformationInitialiser == null) {
-            zoneInformationInitialiser = new HashMap<>();
-        }
-        if (!zoneInformationInitialiser.containsKey("OnlyTeamCanInteract"))
-            zoneInformationInitialiser.put("OnlyTeamCanInteract", true);
-
-        ZoneLib.zoneInformationInitialiser = zoneInformationInitialiser;
-
         // init json entities
         UNCEntitiesContainer.init(plugin.getDataFolder());
 
         // init controller
+        UNCEntitiesContainer.init(plugin.getDataFolder());
         zoneController = new ZoneController(initZoneContainer());
+        zoneParameters = initZoneParameters();
+
+        //init zone informations
+        if (zoneInformationInitialiser == null) {
+            zoneInformationInitialiser = new HashMap<>();
+        }
+        for (Map.Entry<String, Object> entry : zoneParameters.getDefaultZoneAdditionalInformations().entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (!zoneInformationInitialiser.containsKey(key)) {
+                zoneInformationInitialiser.put(key, value);
+            }
+        }
+        zoneParameters.setDefaultZoneAdditionalInformations(zoneInformationInitialiser);
 
         // register commands
         initCommands();
@@ -55,7 +62,6 @@ public class ZoneLib {
     }
 
     private static UNCZoneContainer initZoneContainer() {
-        UNCEntitiesContainer.init(plugin.getDataFolder());
         UNCZoneContainer res;
 
         try {
@@ -64,6 +70,19 @@ public class ZoneLib {
             plugin.getLogger().info("Creating new zone container file");
             res = new UNCZoneContainer();
         }
+        return res;
+    }
+
+    private static UNCZoneParameters initZoneParameters() {
+        UNCZoneParameters res;
+
+        try {
+            res = UNCEntitiesContainer.loadContainer("zones_config", UNCZoneParameters.class);
+        } catch (Exception e) {
+            plugin.getLogger().info("Creating new zone container file");
+            res = new UNCZoneParameters();
+        }
+
         return res;
     }
 

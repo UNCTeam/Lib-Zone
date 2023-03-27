@@ -3,10 +3,12 @@ package fr.teamunc.zone_unclib.minecraft.commands_executors;
 import fr.teamunc.base_unclib.utils.helpers.Message;
 import fr.teamunc.zone_unclib.ZoneLib;
 import fr.teamunc.zone_unclib.models.UNCZone;
+import lombok.val;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,7 +17,7 @@ import java.util.List;
 public class ZoneCommands implements CommandExecutor {
 
     public static List<String> getCommands() {
-        return new ArrayList<>(Arrays.asList("new","addSubZone","list","remove","assignToUNCTeam","unassignFromUNCTeam","setInformation"));
+        return new ArrayList<>(Arrays.asList("new","addSubZone", "removeSubZone","list","here","remove","assignToUNCTeam","unassignFromUNCTeam","setInformation"));
     }
 
     @Override
@@ -24,6 +26,8 @@ public class ZoneCommands implements CommandExecutor {
             Message.Get().sendMessage("ZoneLib is not initialized!", sender, true);
             return false;
         }
+
+        val controller = ZoneLib.getZoneController();
 
         if (args.length != 0) {
             switch (args[0]) {
@@ -35,7 +39,7 @@ public class ZoneCommands implements CommandExecutor {
                         String zoneName = args[1];
 
                         // add the zone
-                        ZoneLib.getZoneController().addZone(zoneName);
+                        controller.addZone(zoneName);
 
                         Message.Get().sendMessage("Zone " + zoneName + " created!", sender, false);
                     }
@@ -50,27 +54,81 @@ public class ZoneCommands implements CommandExecutor {
                         String zoneName = args[1];
 
                         // get the positions
-                        Location corner1 = new Location(sender.getServer().getWorlds().get(0), Integer.parseInt(args[2]), Integer.parseInt(args[3]), Integer.parseInt(args[4]));
-                        Location corner2 = new Location(sender.getServer().getWorlds().get(0), Integer.parseInt(args[5]), Integer.parseInt(args[6]), Integer.parseInt(args[7]));
+                        if (!(sender instanceof Player)) {
+                            Message.Get().sendMessage("You must be a player to use this command!", sender, true);
+                            return false;
+                        }
+                        Player player = (Player) sender;
+                        Location corner1 = new Location(player.getWorld(), Integer.parseInt(args[2]), Integer.parseInt(args[3]), Integer.parseInt(args[4]));
+                        Location corner2 = new Location(player.getWorld(), Integer.parseInt(args[5]), Integer.parseInt(args[6]), Integer.parseInt(args[7]));
+
 
                         // add the positions to the zone
-                        ZoneLib.getZoneController().addInterZone(zoneName, corner1, corner2);
+                        controller.addInterZone(zoneName, corner1, corner2);
 
                         Message.Get().sendMessage("SubZone added to " + zoneName + " !", sender, false);
                     }
                     return true;
                 }
+                case "removeSubZone": {
+                    if (args.length < 2) {
+                        Message.Get().sendMessage("usage : /uncz removeSubZone <zoneName> (<index>|<x> <y> <z>)", sender, true);
+                    } else {
+                        // get the zone name
+                        String zoneName = args[1];
+
+
+                        if (args.length == 3) {
+                            int index = args[2].equals("last") ? controller.getZone(zoneName).getCoordinates().size()-1 : Integer.parseInt(args[2]);
+                            controller.removeInterZone(zoneName, index);
+
+                        } else if (args.length == 5) {
+                            // get the world of the player
+                            if (!(sender instanceof Player)) {
+                                Message.Get().sendMessage("You must be a player to use this command!", sender, true);
+                                return false;
+                            }
+                            Player player = (Player) sender;
+
+                            Location location = new Location(player.getWorld(), Integer.parseInt(args[2]), Integer.parseInt(args[3]), Integer.parseInt(args[4]));
+                            boolean success = controller.removeInterZone(zoneName, location);
+                            if (!success) {
+                                Message.Get().sendMessage("No subzone found at this location!", sender, true);
+                                return true;
+                            }
+                        } else {
+                            Message.Get().sendMessage("usage : /uncz removeSubZone <zoneName> (<index>|<x> <y> <z>)", sender, true);
+                            return true;
+                        }
+
+                        Message.Get().sendMessage("SubZone removed from " + zoneName + " !", sender, false);
+                    }
+                    return true;
+                }
                 case "list": {
                     String informations;
-                    if (args.length == 1) informations = ZoneLib.getZoneController().getZonesInformations();
+                    if (args.length == 1) informations = controller.getZonesInformations();
                     else {
-                        if (!ZoneLib.getZoneController().zoneExist(args[1])) {
+                        if (!controller.zoneExist(args[1])) {
                             Message.Get().sendMessage("Zone " + args[1] + " does not exist!", sender, true);
                             return true;
                         }
-                        UNCZone zone = ZoneLib.getZoneController().getZone(args[1]);
+                        UNCZone zone = controller.getZone(args[1]);
                         informations = zone.getZoneInfo();
                     }
+
+                    Message.Get().sendMessage(informations, sender, false);
+
+                    return true;
+                }
+                case "here": {
+                    if (!(sender instanceof Player)) {
+                        Message.Get().sendMessage("You must be a player to use this command!", sender, true);
+                        return false;
+                    }
+                    Player player = (Player) sender;
+
+                    String informations = controller.getZoneInformations(player.getLocation());
 
                     Message.Get().sendMessage(informations, sender, false);
 
@@ -84,7 +142,7 @@ public class ZoneCommands implements CommandExecutor {
                         String zoneName = args[1];
 
                         // remove the zone
-                        ZoneLib.getZoneController().removeZone(zoneName);
+                        controller.removeZone(zoneName);
 
                         Message.Get().sendMessage("Zone " + zoneName + " removed!", sender, false);
                     }
@@ -101,7 +159,7 @@ public class ZoneCommands implements CommandExecutor {
                         String teamName = args[2];
 
                         // assign the zone to the team
-                        ZoneLib.getZoneController().assignZoneToTeam(zoneName, teamName);
+                        controller.assignZoneToTeam(zoneName, teamName);
 
                         Message.Get().sendMessage("Zone " + zoneName + " assigned to team " + teamName + "!", sender, false);
                     }
@@ -115,7 +173,7 @@ public class ZoneCommands implements CommandExecutor {
                         String zoneName = args[1];
 
                         // unassign the zone from the team
-                        ZoneLib.getZoneController().assignZoneToTeam(zoneName, null);
+                        controller.assignZoneToTeam(zoneName, null);
 
                         Message.Get().sendMessage("Zone " + zoneName + " unassigned from team!", sender, false);
                     }
@@ -145,7 +203,7 @@ public class ZoneCommands implements CommandExecutor {
                             value = args[3];
                         }
                         // set the information
-                        ZoneLib.getZoneController().setAdditionalInformation(zoneName, information, value);
+                        controller.setAdditionalInformation(zoneName, information, value);
 
                         Message.Get().sendMessage("Information " + information + " set to " + value + " for zone " + zoneName + "!", sender, false);
                     }
