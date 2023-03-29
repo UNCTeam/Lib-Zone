@@ -1,7 +1,6 @@
 package fr.teamunc.zone_unclib.minecraft.event_listeners;
 
 import fr.teamunc.zone_unclib.ZoneLib;
-import fr.teamunc.zone_unclib.models.UNCZone;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -22,10 +21,7 @@ public class BlockListener implements Listener {
 
         if (!ZoneLib.isInit()) return;
 
-        // TODO transform this in a canInteract method with a location and a player as parameters and return a boolean by computing all zones where the player is by priority
-        UNCZone zone = ZoneLib.getZoneController().isLocationInAZone(block.getLocation());
-
-        if (!ZoneLib.getZoneController().canInteract(player, zone)) {
+        if (!ZoneLib.getZoneController().canInteract(player, block.getLocation())) {
             event.setCancelled(true);
         }
     }
@@ -37,9 +33,7 @@ public class BlockListener implements Listener {
 
         if (!ZoneLib.isInit()) return;
 
-        UNCZone zone = ZoneLib.getZoneController().isLocationInAZone(block.getLocation());
-
-        if (!ZoneLib.getZoneController().canInteract(player, zone)) {
+        if (!ZoneLib.getZoneController().canInteract(player, block.getLocation())) {
             event.setCancelled(true);
         }
     }
@@ -51,9 +45,8 @@ public class BlockListener implements Listener {
 
         if (!ZoneLib.isInit() || block == null) return;
 
-        UNCZone zone = ZoneLib.getZoneController().isLocationInAZone(block.getLocation());
 
-        if (!ZoneLib.getZoneController().canInteract(player, zone)) {
+        if (!ZoneLib.getZoneController().canInteract(player, block.getLocation())) {
             event.setCancelled(true);
         }
     }
@@ -64,9 +57,7 @@ public class BlockListener implements Listener {
         Player player = event.getPlayer();
         if (!ZoneLib.isInit()) return;
 
-        UNCZone zone = ZoneLib.getZoneController().isLocationInAZone(loc);
-
-        if (!ZoneLib.getZoneController().canInteract(player, zone)) {
+        if (!ZoneLib.getZoneController().canInteract(player, loc)) {
             event.setCancelled(true);
         }
     }
@@ -78,9 +69,7 @@ public class BlockListener implements Listener {
         Player player = (Player) event.getDamager();
         if (!ZoneLib.isInit()) return;
 
-        UNCZone zone = ZoneLib.getZoneController().isLocationInAZone(loc);
-
-        if (!ZoneLib.getZoneController().canInteract(player, zone)) {
+        if (!ZoneLib.getZoneController().canInteract(player, loc)) {
             event.setCancelled(true);
         }
     }

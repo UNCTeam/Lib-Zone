@@ -28,7 +28,7 @@ public class UNCZone {
     private UUID teamId;
 
     public static UNCZoneBuilder builder(String name) {
-        return new UNCZoneBuilder().name(name).coordinates(new ArrayList<>()).additionalInformation(ZoneLib.getZoneInformationInitialiser());
+        return new UNCZoneBuilder().name(name).coordinates(new ArrayList<>()).additionalInformation(ZoneLib.getZoneParameters().getDefaultZoneAdditionalInformations());
     }
 
     public <T> T getAdditionalInformation(String key, Class<T> clazz) throws ClassCastException {
@@ -87,12 +87,12 @@ public class UNCZone {
         }
 
         sb.append("   Additional information : \n");
-        for (String key : this.additionalInformation.keySet()) {
+        for (Map.Entry<String,Object> key : this.additionalInformation.entrySet()) {
             sb
                 .append("       - ")
-                .append(key)
+                .append(key.getKey())
                 .append(" : ")
-                .append(this.additionalInformation.get(key));
+                .append(this.additionalInformation.get(key.getKey()));
         }
         sb.append("\n");
 

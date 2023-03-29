@@ -11,6 +11,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -29,7 +30,7 @@ public class ZoneController {
         return zoneContainer.getZones();
     }
 
-    public ArrayList<UNCZone> isLocationInAZone(Location location) {
+    public List<UNCZone> isLocationInAZone(Location location) {
         val res = new ArrayList<UNCZone>();
         for (UNCZone zone : zoneContainer.getZones()) {
             if (zone.isLocationInZone(location)) {
@@ -39,25 +40,50 @@ public class ZoneController {
         return res;
     }
 
-    public boolean canInteract(Player player, UNCZone zone) {
+    public boolean canInteract(Player player, Location location) {
+        return this.checkForZoneAuthorization(player, location, "OnlyTeamCanInteract");
+    }
+
+    public boolean checkForZoneAuthorization(Player player, Location location, String authorization) {
+        return this.checkForZoneAuthorization(player, location, authorization, "Priority");
+    }
+
+    /**
+     * Check if the player can interact with the block using his team and the zone restrictions
+     * like OnlyTeamCanInteract (OnlyTeamThings = true = Only the team can interact with the block)
+     * @param player the player
+     * @param location the location of the block
+     * @param authorization the authorization to check
+     * @param sortingParameter the parameter to sort the zones by priority
+     * @return
+     */
+    public boolean checkForZoneAuthorization(Player player, Location location, String authorization, String sortingParameter) {
         UNCTeamController teamController = EkipLib.getTeamController();
+        List<UNCZone> zones = isLocationInAZone(location);
 
-        if (zone == null)
+        if (zones.isEmpty()) {
             return true;
+        }
 
-        if (zone.getAdditionalInformation("OnlyTeamCanInteract", Boolean.class).equals(false))
-            return true;
+        UNCTeam playerTeam = teamController.getTeamOfPlayer(player.getUniqueId());
 
-        if (zone.getTeamName() == null)
+        if (playerTeam == null) {
             return false;
+        }
 
-        UNCTeam team = teamController.getTeam(zone.getTeamName());
+        zones.sort(Comparator.comparingInt(z -> z.getAdditionalInformation(sortingParameter, Integer.class)));
 
-        if (team == null)
-            throw new IllegalArgumentException("La team n'existe pas.");
+        for (UNCZone zone : zones) {
+            val restricted = zone.getAdditionalInformation(authorization, Boolean.class);
+            if (restricted != null) {
+                if (restricted) {
+                    return playerTeam.getName().equals(zone.getTeamName());
+                }
+                return true;
+            }
+        }
 
-
-        return team.getPlayers().contains(player.getUniqueId());
+        return true;
     }
 
     public void addZone(String name) {
@@ -140,7 +166,7 @@ public class ZoneController {
     }
 
     public String getZoneInformations(Location location) {
-        ArrayList<UNCZone> zones = isLocationInAZone(location);
+        List<UNCZone> zones = isLocationInAZone(location);
         if (zones.isEmpty())
             return "Vous n'êtes pas dans une zone.";
 
