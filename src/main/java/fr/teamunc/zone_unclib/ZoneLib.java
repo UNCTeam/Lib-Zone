@@ -79,7 +79,7 @@ public class ZoneLib {
         try {
             res = UNCEntitiesContainer.loadContainer("zones_config", UNCZoneParameters.class);
         } catch (Exception e) {
-            plugin.getLogger().info("Creating new zone container file");
+            plugin.getLogger().info("Creating new zone parameters file");
             res = new UNCZoneParameters();
         }
 
@@ -98,5 +98,6 @@ public class ZoneLib {
     }
     public static void save() {
         zoneController.save("zones");
+        zoneParameters.save("zones_config");
     }
 }
