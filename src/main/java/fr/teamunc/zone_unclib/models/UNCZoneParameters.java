@@ -18,5 +18,6 @@ public class UNCZoneParameters extends UNCEntitiesContainer {
 
         this.defaultZoneAdditionalInformations.put("OnlyTeamCanInteract", true);
         this.defaultZoneAdditionalInformations.put("Priority", 0);
+        this.defaultZoneAdditionalInformations.put("OnlyTeamCanPvP", true);
     }
 }

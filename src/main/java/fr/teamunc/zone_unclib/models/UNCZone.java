@@ -8,10 +8,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.bukkit.Location;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Builder(toBuilder = true)
 public class UNCZone {
@@ -28,7 +25,7 @@ public class UNCZone {
     private UUID teamId;
 
     public static UNCZoneBuilder builder(String name) {
-        return new UNCZoneBuilder().name(name).coordinates(new ArrayList<>()).additionalInformation(ZoneLib.getZoneParameters().getDefaultZoneAdditionalInformations());
+        return new UNCZoneBuilder().name(name).coordinates(new ArrayList<>()).additionalInformation(new HashMap<>(ZoneLib.getZoneParameters().getDefaultZoneAdditionalInformations()));
     }
 
     public <T> T getAdditionalInformation(String key, Class<T> clazz) throws ClassCastException {
@@ -92,9 +89,9 @@ public class UNCZone {
                 .append("       - ")
                 .append(key.getKey())
                 .append(" : ")
-                .append(this.additionalInformation.get(key.getKey()));
+                .append(this.additionalInformation.get(key.getKey()))
+                .append("\n");;
         }
-        sb.append("\n");
 
         return sb.toString();
     }

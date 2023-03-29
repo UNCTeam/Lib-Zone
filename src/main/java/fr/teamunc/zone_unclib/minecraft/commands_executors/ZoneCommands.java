@@ -194,11 +194,7 @@ public class ZoneCommands implements CommandExecutor {
                         if (args[3].equals("true") || args[3].equals("false")) {
                             value = Boolean.parseBoolean(args[3]);
                         } else if (args[3].matches("-?\\d+(\\.\\d+)?")) {
-                            if (args[3].contains(".")) {
-                                value = Double.parseDouble(args[3]);
-                            } else {
-                                value = Integer.parseInt(args[3]);
-                            }
+                            value = Double.parseDouble(args[3]);
                         } else {
                             value = args[3];
                         }

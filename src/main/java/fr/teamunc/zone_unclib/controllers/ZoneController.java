@@ -71,7 +71,7 @@ public class ZoneController {
             return false;
         }
 
-        zones.sort(Comparator.comparingInt(z -> z.getAdditionalInformation(sortingParameter, Integer.class)));
+        zones.sort(Comparator.comparingDouble(z -> z.getAdditionalInformation(sortingParameter, Double.class)));
 
         for (UNCZone zone : zones) {
             val restricted = zone.getAdditionalInformation(authorization, Boolean.class);
@@ -83,6 +83,19 @@ public class ZoneController {
             }
         }
 
+        return true;
+    }
+
+    public boolean canPvP(Player player, Player player2, Location location) {
+        UNCTeamController teamController = EkipLib.getTeamController();
+
+        val isPvPTeamOnly = checkForZoneAuthorization(player, location, "OnlyTeamCanPvP");
+
+        if (isPvPTeamOnly) {
+            val playerTeam = teamController.getTeamOfPlayer(player.getUniqueId());
+            val player2Team = teamController.getTeamOfPlayer(player2.getUniqueId());
+            return playerTeam != null && player2Team != null && playerTeam.getName().equals(player2Team.getName());
+        }
         return true;
     }
 

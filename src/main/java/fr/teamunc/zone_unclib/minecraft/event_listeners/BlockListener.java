@@ -1,6 +1,7 @@
 package fr.teamunc.zone_unclib.minecraft.event_listeners;
 
 import fr.teamunc.zone_unclib.ZoneLib;
+import lombok.val;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -57,6 +58,16 @@ public class BlockListener implements Listener {
         Player player = event.getPlayer();
         if (!ZoneLib.isInit()) return;
 
+        // separate the two cases players and entities
+        if (event.getRightClicked() instanceof Player) {
+            val target = (Player) event.getRightClicked();
+            if (!ZoneLib.getZoneController().canPvP(player,target, loc)) {
+                event.setCancelled(true);
+            }
+            return;
+        }
+
+        // standard case
         if (!ZoneLib.getZoneController().canInteract(player, loc)) {
             event.setCancelled(true);
         }
@@ -69,6 +80,16 @@ public class BlockListener implements Listener {
         Player player = (Player) event.getDamager();
         if (!ZoneLib.isInit()) return;
 
+        // separate the two cases players and entities
+        if (event.getEntity() instanceof Player) {
+            val target = (Player) event.getEntity();
+            if (!ZoneLib.getZoneController().canPvP(player,target, loc)) {
+                event.setCancelled(true);
+            }
+            return;
+        }
+
+        // standard case
         if (!ZoneLib.getZoneController().canInteract(player, loc)) {
             event.setCancelled(true);
         }
