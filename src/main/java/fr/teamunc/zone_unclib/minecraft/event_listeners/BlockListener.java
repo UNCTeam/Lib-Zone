@@ -47,8 +47,9 @@ public class BlockListener implements Listener {
         if (!ZoneLib.isInit() || block == null) return;
 
 
-        if (!ZoneLib.getZoneController().canInteract(player, block.getLocation())) {
-            event.setCancelled(true);
+        if (!ZoneLib.getZoneController().canInteract(player, block.getLocation())
+                || !ZoneLib.getZoneController().canInteract(player, player.getLocation())) {
+                event.setCancelled(true);
         }
     }
 
@@ -57,6 +58,8 @@ public class BlockListener implements Listener {
         Location loc = event.getRightClicked().getLocation();
         Player player = event.getPlayer();
         if (!ZoneLib.isInit()) return;
+
+        if (event.getRightClicked().hasMetadata("NPC")) return;
 
         // separate the two cases players and entities
         if (event.getRightClicked() instanceof Player) {
@@ -94,4 +97,6 @@ public class BlockListener implements Listener {
             event.setCancelled(true);
         }
     }
+
+
 }
